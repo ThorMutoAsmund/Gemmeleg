@@ -337,6 +337,10 @@ PrefabInstance:
       propertyPath: m_LocalScale.z
       value: 3
       objectReference: {fileID: 0}
+    - target: {fileID: 4151191063193432849, guid: fc4245223e4122142bb14239d44230ef, type: 3}
+      propertyPath: viewIdField
+      value: 2
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: fc4245223e4122142bb14239d44230ef, type: 3}
 --- !u!1001 &812478649
@@ -852,6 +856,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1997462384830184632, guid: a40a7053b15e2e649b3e1eb91962ca25, type: 3}
+      propertyPath: viewIdField
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5822301880001967467, guid: a40a7053b15e2e649b3e1eb91962ca25, type: 3}
       propertyPath: m_Constraints
       value: 112

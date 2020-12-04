@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using Photon.Pun;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -38,17 +39,17 @@ namespace Gemmeleg
             IEnumerator SpawnPlayers()
             {
                 yield return new WaitForSeconds(2f);
-                SpawnPlayer(true, this.spawnPoint);
-                SpawnPlayer(false, this.spawnPoint2);
-                SpawnPlayer(false, this.spawnPoint3);
-                SpawnPlayer(false, this.spawnPoint4);
+                SpawnPlayer(true, this.spawnPoint, 1);
+                SpawnPlayer(false, this.spawnPoint2, 2);
+                SpawnPlayer(false, this.spawnPoint3, 3);
+                SpawnPlayer(false, this.spawnPoint4, 4);
                 this.GetComponent<Camera>().enabled = false;
             }
 
             StartCoroutine(SpawnPlayers());
         }
 
-        private void SpawnPlayer(bool isMain, GameObject spawnPoint)
+        private void SpawnPlayer(bool isMain, GameObject spawnPoint, int playerNo)
         {
             var playerGameObject = GameObject.Instantiate(this.playerPrefab, null);
             playerGameObject.transform.SetPositionAndRotation(spawnPoint.transform.position, spawnPoint.transform.rotation);
@@ -61,6 +62,8 @@ namespace Gemmeleg
 
             var cameraGameObject = playerGameObject.GetComponentInChildren<Camera>().gameObject;
             cameraGameObject.SetActive(isMain);
+            var photonView = playerGameObject.GetComponentInChildren<PhotonView>();
+            photonView.ViewID = playerNo * 1000;
 
             this.sceneCameras.Add(cameraGameObject);
         }
