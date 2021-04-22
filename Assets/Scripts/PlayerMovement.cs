@@ -89,7 +89,7 @@ namespace Gemmeleg
 
         private bool IsGrounded()
         {
-            return Physics.Raycast(transform.position, -Vector3.up, this.distToGround + 0.3f);
+            return Physics.Raycast(transform.position, -Vector3.up, this.distToGround + 1.0f);
         }
 
         private void Update()
