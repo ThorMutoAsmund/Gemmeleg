@@ -7,6 +7,10 @@ namespace Gemmeleg
 {
     public class PlayerMovement : MonoBehaviour
     {
+        [SerializeField] private AudioSource runningAudioSource;
+        [SerializeField] private AudioSource jumpAudioSource;
+        [SerializeField] private AudioSource walkingAudioSource;
+
         private readonly float rotationSpeed = 1.5f;
         private readonly float lookSpeed = 1.2f;
         private readonly float lookDownMax = 90f - 10f;
@@ -55,13 +59,16 @@ namespace Gemmeleg
             this.body.AddForce(decelerationVector * this.deceleration);
 
             var shiftIsDown = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+
+            bool playRunningSound = false;
+
             if (Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W))
             {
                 if (localVel.z < (!shiftIsDown ? this.maxForwardWalkVelocity : this.maxForwardSneakVelocity))
                 {
                     this.body.AddForce(forwardVector * (!shiftIsDown ? this.forwardWalkForce : this.forwardSneakForce));
                 }
-
+                playRunningSound = true;
             }
             else if (Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S))
             {
@@ -69,6 +76,7 @@ namespace Gemmeleg
                 {
                     this.body.AddForce(backVector * (!shiftIsDown ? this.backwardsWalkForce : this.backwardsSneakForce));
                 }
+                playRunningSound = true;
             }
 
             if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A))
@@ -77,6 +85,7 @@ namespace Gemmeleg
                 {
                     this.body.AddForce(this.transform.right * -this.sidewaysForce);
                 }
+                playRunningSound = true;
             }
             else if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D))
             {
@@ -84,12 +93,35 @@ namespace Gemmeleg
                 {
                     this.body.AddForce(this.transform.right * this.sidewaysForce);
                 }
+                playRunningSound = true;
+            }
+
+            if (playRunningSound && !shiftIsDown)
+            {
+                if (!this.runningAudioSource.isPlaying)
+                {
+                    this.runningAudioSource.Play();
+                }
+                this.walkingAudioSource.Stop();
+            }
+            else if (playRunningSound && shiftIsDown)
+            {
+                if (!this.walkingAudioSource.isPlaying)
+                {
+                    this.walkingAudioSource.Play();
+                }
+                this.runningAudioSource.Stop();
+            }
+            else
+            {
+                this.walkingAudioSource.Stop();
+                this.runningAudioSource.Stop();
             }
         }
 
         private bool IsGrounded()
         {
-            return Physics.Raycast(transform.position, -Vector3.up, this.distToGround + 1.0f);
+            return Physics.Raycast(transform.position, -Vector3.up, this.distToGround + 0.8f);
         }
 
         private void Update()
@@ -99,6 +131,7 @@ namespace Gemmeleg
                 if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.F))
                 {
                     this.body.AddForce(new Vector3(0, this.jumpForce, 0), ForceMode.Impulse);
+                    this.jumpAudioSource.Play();
                 }
             }
             else
