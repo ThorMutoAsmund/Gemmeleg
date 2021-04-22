@@ -85,18 +85,6 @@ namespace Gemmeleg
                     this.body.AddForce(this.transform.right * this.sidewaysForce);
                 }
             }
-
-            if (IsGrounded())
-            {
-                if (Input.GetKeyDown(KeyCode.Space))
-                {
-                    this.body.AddForce(new Vector3(0, this.jumpForce, 0), ForceMode.Impulse);
-                }
-            }
-            else
-            {
-                this.body.AddForce(Physics.gravity, ForceMode.Acceleration);
-            }
         }
 
         private bool IsGrounded()
@@ -106,6 +94,18 @@ namespace Gemmeleg
 
         private void Update()
         {
+            if (IsGrounded())
+            {
+                if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.F))
+                {
+                    this.body.AddForce(new Vector3(0, this.jumpForce, 0), ForceMode.Impulse);
+                }
+            }
+            else
+            {
+                this.body.AddForce(Physics.gravity, ForceMode.Acceleration);
+            }
+
             float mouse = Input.GetAxis("Mouse X");
             if (mouse != 0f)
             {
