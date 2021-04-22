@@ -46,6 +46,10 @@ namespace Gemmeleg
                 {
                     canOpen.Toogle();
                 }
+                else if (selectedCollider.TryGetComponent<ICanBeTaken>(out var canBeTaken))
+                {
+                    canBeTaken.Take(this.transform);
+                }
             }
         }
     }

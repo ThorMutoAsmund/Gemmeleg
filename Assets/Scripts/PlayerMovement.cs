@@ -1,42 +1,46 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.AI;
 
 namespace Gemmeleg
 {
     public class PlayerMovement : MonoBehaviour
     {
-        private readonly float rotationSpeed = 3f;
-        private readonly float lookSpeed = 3f;
+        private readonly float rotationSpeed = 1.5f;
+        private readonly float lookSpeed = 1.2f;
         private readonly float lookDownMax = 90f - 10f;
         private readonly float lookUpMax = 270f + 10f;
 
-        private readonly float maxBackwardsVelocity = 15f;
-        private readonly float maxBackwardsRunVelocity = 50f;
-        private readonly float backwardsForce = 2500f;
-        private readonly float backwardsRunForce = 5000f;
+        private readonly float maxBackwardsSneakVelocity = 15f;
+        private readonly float maxBackwardsWalkVelocity = 50f;
+        private readonly float backwardsSneakForce = 2500f;
+        private readonly float backwardsWalkForce = 7500f;
 
-        private readonly float maxForwardVelocity = 15f;
-        private readonly float maxForwardRunVelocity = 50f;
-        private readonly float forwardForce = 2500f;
-        private readonly float forwardRunForce = 5000f;
+        private readonly float maxForwardSneakVelocity = 15f;
+        private readonly float maxForwardWalkVelocity = 50f;
+        private readonly float forwardSneakForce = 2500f;
+        private readonly float forwardWalkForce = 7500f;
 
-        private readonly float maxSidewaysVelocity = 10f;
-        private readonly float sidewaysForce = 2000f;
+        private readonly float maxSidewaysVelocity = 20f;
+        private readonly float sidewaysForce = 4000f;
 
-        private readonly float jumpForce = 500f;
+        private readonly float jumpForce = 800f;
 
         private readonly float deceleration = 400f;
-        private readonly int countToUngrounded = 3;
 
         private Rigidbody body;
-        private bool isGrounded = true;
-        private int groundCounter;
         private new Camera camera;
+        private float distToGround;
+        private NavMeshAgent navAgent;
 
         private void Start()
         {
             this.body = GetComponent<Rigidbody>();
             this.body.drag = 0;
             this.camera = this.GetComponentInChildren<Camera>();
+            this.distToGround = GetComponent<SphereCollider>().radius;
+            this.navAgent = GetComponent<NavMeshAgent>();
         }
 
         private void FixedUpdate()
@@ -53,17 +57,17 @@ namespace Gemmeleg
             var shiftIsDown = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
             if (Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W))
             {
-                if (localVel.z < (shiftIsDown ? this.maxForwardRunVelocity : this.maxForwardVelocity))
+                if (localVel.z < (!shiftIsDown ? this.maxForwardWalkVelocity : this.maxForwardSneakVelocity))
                 {
-                    this.body.AddForce(forwardVector * (shiftIsDown ? this.forwardRunForce : this.forwardForce));
+                    this.body.AddForce(forwardVector * (!shiftIsDown ? this.forwardWalkForce : this.forwardSneakForce));
                 }
 
             }
             else if (Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S))
             {
-                if (localVel.z > (shiftIsDown ? -this.maxBackwardsRunVelocity : -this.maxBackwardsVelocity))
+                if (localVel.z > (!shiftIsDown ? -this.maxBackwardsWalkVelocity : -this.maxBackwardsSneakVelocity))
                 {
-                    this.body.AddForce(backVector * (shiftIsDown ? this.backwardsRunForce : this.backwardsForce));
+                    this.body.AddForce(backVector * (!shiftIsDown ? this.backwardsWalkForce : this.backwardsSneakForce));
                 }
             }
 
@@ -82,35 +86,27 @@ namespace Gemmeleg
                 }
             }
 
-            if (this.isGrounded)
+            if (IsGrounded())
             {
-                if (Input.GetKey(KeyCode.Space))
+                if (Input.GetKeyDown(KeyCode.Space))
                 {
-                    this.isGrounded = false;
-                    this.groundCounter = 0;
                     this.body.AddForce(new Vector3(0, this.jumpForce, 0), ForceMode.Impulse);
                 }
             }
             else
             {
-                if (localVel.y < 0.1f && localVel.y > -0.1f)
-                {
-                    groundCounter++;
-                    if (groundCounter >= this.countToUngrounded)
-                    {
-                        this.isGrounded = true;
-                    }
-                }
-                else
-                {
-                    this.groundCounter = 0;
-                }
+                this.body.AddForce(Physics.gravity, ForceMode.Acceleration);
             }
+        }
+
+        private bool IsGrounded()
+        {
+            return Physics.Raycast(transform.position, -Vector3.up, this.distToGround + 0.3f);
         }
 
         private void Update()
         {
-            float mouse = Input.GetAxis("Mouse X");        
+            float mouse = Input.GetAxis("Mouse X");
             if (mouse != 0f)
             {
                 this.transform.Rotate(this.transform.up, mouse * this.rotationSpeed);
