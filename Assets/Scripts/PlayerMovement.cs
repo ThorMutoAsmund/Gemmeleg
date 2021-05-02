@@ -14,6 +14,10 @@ namespace Gemmeleg
         [SerializeField] private Collider crouchCollider;
         [SerializeField] private Transform cameraOffset;
 
+        public bool MovementEnabled { get; set; } = true;
+
+        public Transform CameraOffset => this.cameraOffset;
+
         private readonly float rotationSpeed = 1.5f;
         private readonly float lookSpeed = 1.2f;
         private readonly float lookDownMax = 90f - 10f;
@@ -32,7 +36,7 @@ namespace Gemmeleg
         private readonly float maxSidewaysVelocity = 20f;
         private readonly float sidewaysForce = 4000f;
 
-        private readonly float jumpForce = 1000f;
+        private readonly float jumpForce = 1200f;
         private readonly float crouchTime = 0.15f;
 
         private readonly float deceleration = 400f;
@@ -59,86 +63,89 @@ namespace Gemmeleg
 
         private void FixedUpdate()
         {
-            var localVel = this.transform.InverseTransformDirection(this.body.velocity);
+            if (this.MovementEnabled)
+            {
+                var localVel = this.transform.InverseTransformDirection(this.body.velocity);
 
-            var forwardVector = this.transform.forward.With(y: -0.35f);
-            var backVector = (-this.transform.forward).With(y: -0.35f);
-            var decelerationVector = -this.body.velocity;
-            decelerationVector.y = 0;
+                var forwardVector = this.transform.forward.With(y: -0.35f);
+                var backVector = (-this.transform.forward).With(y: -0.35f);
+                var decelerationVector = -this.body.velocity;
+                decelerationVector.y = 0;
 
-            this.body.AddForce(decelerationVector * this.deceleration);
+                this.body.AddForce(decelerationVector * this.deceleration);
 
-            var shiftIsDown = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-            var ctrlIsDown = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
-            var useSneakSpeed = shiftIsDown || ctrlIsDown;
-            bool playRunningSound = false;
+                var shiftIsDown = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+                var ctrlIsDown = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+                var useSneakSpeed = shiftIsDown || ctrlIsDown;
+                bool playRunningSound = false;
 
-            if (Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W))
-            {
-                if (localVel.z < (useSneakSpeed ? this.maxForwardSneakVelocity : this.maxForwardWalkVelocity))
+                if (Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W))
                 {
-                    this.body.AddForce(forwardVector * (useSneakSpeed ? this.forwardSneakForce : this.forwardWalkForce));
+                    if (localVel.z < (useSneakSpeed ? this.maxForwardSneakVelocity : this.maxForwardWalkVelocity))
+                    {
+                        this.body.AddForce(forwardVector * (useSneakSpeed ? this.forwardSneakForce : this.forwardWalkForce));
+                    }
+                    playRunningSound = true;
                 }
-                playRunningSound = true;
-            }
-            else if (Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S))
-            {
-                if (localVel.z > (useSneakSpeed ? -this.maxBackwardsSneakVelocity : -this.maxBackwardsWalkVelocity))
+                else if (Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S))
                 {
-                    this.body.AddForce(backVector * (useSneakSpeed ? this.backwardsSneakForce : this.backwardsWalkForce));
+                    if (localVel.z > (useSneakSpeed ? -this.maxBackwardsSneakVelocity : -this.maxBackwardsWalkVelocity))
+                    {
+                        this.body.AddForce(backVector * (useSneakSpeed ? this.backwardsSneakForce : this.backwardsWalkForce));
+                    }
+                    playRunningSound = true;
                 }
-                playRunningSound = true;
-            }
 
-            if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A))
-            {
-                if (localVel.x > -this.maxSidewaysVelocity)
+                if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A))
                 {
-                    this.body.AddForce(this.transform.right * -this.sidewaysForce);
+                    if (localVel.x > -this.maxSidewaysVelocity)
+                    {
+                        this.body.AddForce(this.transform.right * -this.sidewaysForce);
+                    }
+                    playRunningSound = true;
                 }
-                playRunningSound = true;
-            }
-            else if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D))
-            {
-                if (localVel.x < this.maxSidewaysVelocity)
+                else if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D))
                 {
-                    this.body.AddForce(this.transform.right * this.sidewaysForce);
+                    if (localVel.x < this.maxSidewaysVelocity)
+                    {
+                        this.body.AddForce(this.transform.right * this.sidewaysForce);
+                    }
+                    playRunningSound = true;
                 }
-                playRunningSound = true;
-            }
 
-            if (ctrlIsDown != this.isCrouching)
-            {
-                this.isCrouching = ctrlIsDown;
-                this.normalCollider.enabled = !this.isCrouching;
-                this.crouchCollider.enabled = this.isCrouching;
-                if (this.crouchCoroutine != null)
+                if (ctrlIsDown != this.isCrouching)
                 {
-                    StopCoroutine(this.crouchCoroutine);
+                    this.isCrouching = ctrlIsDown;
+                    this.normalCollider.enabled = !this.isCrouching;
+                    this.crouchCollider.enabled = this.isCrouching;
+                    if (this.crouchCoroutine != null)
+                    {
+                        StopCoroutine(this.crouchCoroutine);
+                    }
+                    this.crouchCoroutine = StartCoroutine(Crouch(this.isCrouching));
                 }
-                this.crouchCoroutine = StartCoroutine(Crouch(this.isCrouching));
-            }
 
-            if (playRunningSound && !shiftIsDown)
-            {
-                if (!this.runningAudioSource.isPlaying)
+                if (playRunningSound && !shiftIsDown)
                 {
-                    this.runningAudioSource.Play();
+                    if (!this.runningAudioSource.isPlaying)
+                    {
+                        this.runningAudioSource.Play();
+                    }
+                    this.walkingAudioSource.Stop();
                 }
-                this.walkingAudioSource.Stop();
-            }
-            else if (playRunningSound && shiftIsDown)
-            {
-                if (!this.walkingAudioSource.isPlaying)
+                else if (playRunningSound && shiftIsDown)
                 {
-                    this.walkingAudioSource.Play();
+                    if (!this.walkingAudioSource.isPlaying)
+                    {
+                        this.walkingAudioSource.Play();
+                    }
+                    this.runningAudioSource.Stop();
                 }
-                this.runningAudioSource.Stop();
-            }
-            else
-            {
-                this.walkingAudioSource.Stop();
-                this.runningAudioSource.Stop();
+                else
+                {
+                    this.walkingAudioSource.Stop();
+                    this.runningAudioSource.Stop();
+                }
             }
         }
 
@@ -166,7 +173,7 @@ namespace Gemmeleg
         {
             if (IsGrounded())
             {
-                if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.F))
+                if (Input.GetKeyDown(KeyCode.Space))
                 {
                     this.body.AddForce(new Vector3(0, this.jumpForce, 0), ForceMode.Impulse);
                     this.jumpAudioSource.Play();
