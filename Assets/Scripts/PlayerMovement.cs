@@ -32,7 +32,7 @@ namespace Gemmeleg
         private readonly float maxSidewaysVelocity = 20f;
         private readonly float sidewaysForce = 4000f;
 
-        private readonly float jumpForce = 800f;
+        private readonly float jumpForce = 1000f;
         private readonly float crouchTime = 0.15f;
 
         private readonly float deceleration = 400f;
