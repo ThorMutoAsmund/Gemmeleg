@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Gemmeleg
 {
-    public interface ICanBeTaken
+    public interface ICanBeTaken : IEInteractive
     {
         void Take(Transform actor);
     }

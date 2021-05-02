@@ -11,6 +11,7 @@ namespace Gemmeleg
     {
         private readonly float interactionRadius = 2f;
         private Collider[] colliders;
+        private ICanBeDriven vehicle;
 
         private void Awake()
         {
@@ -33,24 +34,28 @@ namespace Gemmeleg
         {
             var numberOfColliders = Physics.OverlapSphereNonAlloc(this.transform.position, this.interactionRadius, this.colliders, Layers.InteractionLayerMask);
             var minDist = float.MaxValue;
-            Collider selectedCollider = null;
+            IEInteractive selectedInteractive = null;
             for (int i = 0; i < numberOfColliders; ++i)
             {
-                var dist = Vector3.Distance(this.colliders[i].transform.position, this.transform.position);
-                if (dist < minDist)
+                var interactive = this.colliders[i].GetComponentInParent<IEInteractive>();
+                if (interactive != null)
                 {
-                    minDist = dist;
-                    selectedCollider = this.colliders[i];
+                    var dist = Vector3.Distance(this.colliders[i].transform.position, this.transform.position);
+                    if (dist < minDist)
+                    {
+                        minDist = dist;
+                        selectedInteractive = interactive;
+                    }
                 }
             }
 
-            if (selectedCollider != null)
+            if (selectedInteractive != null)
             {
-                if (selectedCollider.TryGetComponent<ICanOpen>(out var canOpen))
+                if (selectedInteractive is ICanOpen canOpen)
                 {
                     canOpen.Toogle();
                 }
-                else if (selectedCollider.TryGetComponent<ICanBeTaken>(out var canBeTaken))
+                else if (selectedInteractive is ICanBeTaken canBeTaken)
                 {
                     canBeTaken.Take(this.transform);
                 }
@@ -59,25 +64,38 @@ namespace Gemmeleg
 
         private void AttemptInteractionWithF()
         {
+            // Get off?
+            if (this.vehicle != null)
+            {
+                this.vehicle.Exit();
+                this.vehicle = null;
+                return;
+            }
+
+            // Get on?
             var numberOfColliders = Physics.OverlapSphereNonAlloc(this.transform.position, this.interactionRadius, this.colliders, Layers.InteractionLayerMask);
             var minDist = float.MaxValue;
-            Collider selectedCollider = null;
+            IFInteractive selectedInteractive = null;
             for (int i = 0; i < numberOfColliders; ++i)
             {
-                var dist = Vector3.Distance(this.colliders[i].transform.position, this.transform.position);
-                if (dist < minDist)
+                var interactive = this.colliders[i].GetComponentInParent<IFInteractive>();
+                if (interactive != null)
                 {
-                    minDist = dist;
-                    selectedCollider = this.colliders[i];
+                    var dist = Vector3.Distance(this.colliders[i].transform.position, this.transform.position);
+                    if (dist < minDist)
+                    {
+                        minDist = dist;
+                        selectedInteractive = interactive;
+                    }
                 }
             }
 
-            if (selectedCollider != null)
+            if (selectedInteractive != null)
             {
-                ICanBeDriven canBeDriven;
-                if (selectedCollider.TryGetComponent<ICanBeDriven>(out canBeDriven) || (selectedCollider.transform.parent != null && selectedCollider.transform.parent.TryGetComponent<ICanBeDriven>(out canBeDriven)))
+                if (selectedInteractive is ICanBeDriven vehicle)
                 {
-                    canBeDriven.Enter(this.gameObject);
+                    this.vehicle = vehicle;
+                    this.vehicle.Enter(this.gameObject);
                 }
             }
         }

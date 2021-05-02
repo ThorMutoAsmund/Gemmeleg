@@ -7,35 +7,30 @@ namespace Gemmeleg
 {
     public class CarMovement : MonoBehaviour
     {
-        private readonly float maxBackwardsWalkVelocity = 200f;
-        private readonly float backwardsWalkForce = 60000f;
+        [SerializeField] private Transform cameraOffset;
 
-        private readonly float maxForwardWalkVelocity = 200f;
-        private readonly float forwardWalkForce = 60000f;
+        private readonly float maxBackwardsDriveVelocity = 150f;
+        private readonly float backwardsDriveForce = 45000f;
 
-        private readonly float maxRotateVelocity = 200f;
-        private readonly float rotateForce = 30000f;
+        private readonly float maxForwardDriveVelocity = 300f;
+        private readonly float forwardDriveForce = 90000f;
 
         private readonly float deceleration = 400f;
+        private readonly float rotationSpeed = 0.025f;
+
+        private readonly float cameraRotationSpeed = 1.5f;
+        private readonly float cameraLookSpeed = 1.2f;
+        private readonly float cameraLookUpMax = 270f + 10f;
+        private readonly float cameraLookDownMax = 90f - 10f;
 
         private Rigidbody body;
         private new Camera camera;
-        private float distToGround;
-        private NavMeshAgent navAgent;
-        private Vector3 cameraNormalPosition;
-        private Vector3 cameraCrouchPosition;
-        private bool isCrouching;
-        private Coroutine crouchCoroutine;
+        private float rotation;
 
         private void Start()
         {
             this.body = GetComponent<Rigidbody>();
             this.body.drag = 0;
-            this.camera = this.GetComponentInChildren<Camera>();
-            this.distToGround = GetComponent<SphereCollider>().radius;
-            this.navAgent = GetComponent<NavMeshAgent>();
-            this.cameraNormalPosition = new Vector3(0f, 1.5f, 0f);
-            this.cameraCrouchPosition = new Vector3(0f, 1.5f*0.6f, 0f);
         }
 
         private void FixedUpdate()
@@ -51,32 +46,61 @@ namespace Gemmeleg
 
             if (Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W))
             {
-                if (localVel.z < this.maxForwardWalkVelocity)
+                if (localVel.z < this.maxForwardDriveVelocity)
                 {
-                    this.body.AddForce(forwardVector * this.forwardWalkForce);
+                    this.body.AddForce(forwardVector * this.forwardDriveForce);
                 }
             }
             else if (Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S))
             {
-                if (localVel.z > -this.maxBackwardsWalkVelocity)
+                if (localVel.z > -this.maxBackwardsDriveVelocity)
                 {
-                    this.body.AddForce(backVector * this.backwardsWalkForce);
+                    this.body.AddForce(backVector * this.backwardsDriveForce);
                 }
             }
 
             if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A))
             {
-                this.transform.Rotate(0f, -1f, 0f);
+                this.transform.Rotate(this.transform.up, -localVel.magnitude * (localVel.z > 0 ? this.rotationSpeed : -this.rotationSpeed));
             }
             else if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D))
             {
-                this.transform.Rotate(0f, 1f, 0f);
+                this.transform.Rotate(this.transform.up, localVel.magnitude * (localVel.z > 0 ? this.rotationSpeed : -this.rotationSpeed));
             }
         }
 
-
         private void Update()
         {
+            float mouse = Input.GetAxis("Mouse X");
+            if (mouse != 0f)
+            {
+                this.cameraOffset.Rotate(this.transform.up, mouse * this.cameraRotationSpeed);
+            }
+
+            mouse = Input.GetAxis("Mouse Y");
+            if (mouse != 0f)
+            {
+                var euler = new Vector3(this.camera.transform.localRotation.eulerAngles.x - mouse * this.cameraLookSpeed, 0f, 0f);
+                if (euler.x < this.cameraLookUpMax && euler.x > 180f)
+                {
+                    euler.x = this.cameraLookUpMax;
+                }
+                else if (euler.x > this.cameraLookDownMax && euler.x < 180f)
+                {
+                    euler.x = this.cameraLookDownMax;
+                }
+
+                this.camera.transform.localRotation = Quaternion.Euler(euler);
+            }
+        }
+
+        public void SetCamera(Camera camera)
+        {
+            this.camera = camera;
+            this.camera.transform.parent = this.cameraOffset;
+            this.camera.transform.localPosition = Vector3.zero;
+            this.camera.transform.localRotation = Quaternion.identity;
+            this.transform.localRotation = Quaternion.identity;
         }
     }
 }

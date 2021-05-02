@@ -14,9 +14,8 @@ namespace Gemmeleg
         [SerializeField] private Collider crouchCollider;
         [SerializeField] private Transform cameraOffset;
 
-        public bool MovementEnabled { get; set; } = true;
-
         public Transform CameraOffset => this.cameraOffset;
+        public Camera Camera => this.camera;
 
         private readonly float rotationSpeed = 1.5f;
         private readonly float lookSpeed = 1.2f;
@@ -63,110 +62,87 @@ namespace Gemmeleg
 
         private void FixedUpdate()
         {
-            if (this.MovementEnabled)
+            var localVel = this.transform.InverseTransformDirection(this.body.velocity);
+
+            var forwardVector = this.transform.forward.With(y: -0.35f);
+            var backVector = (-this.transform.forward).With(y: -0.35f);
+            var decelerationVector = -this.body.velocity;
+            decelerationVector.y = 0;
+
+            this.body.AddForce(decelerationVector * this.deceleration);
+
+            var shiftIsDown = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+            var ctrlIsDown = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+            var useSneakSpeed = shiftIsDown || ctrlIsDown;
+            bool playRunningSound = false;
+
+            if (Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W))
             {
-                var localVel = this.transform.InverseTransformDirection(this.body.velocity);
-
-                var forwardVector = this.transform.forward.With(y: -0.35f);
-                var backVector = (-this.transform.forward).With(y: -0.35f);
-                var decelerationVector = -this.body.velocity;
-                decelerationVector.y = 0;
-
-                this.body.AddForce(decelerationVector * this.deceleration);
-
-                var shiftIsDown = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-                var ctrlIsDown = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
-                var useSneakSpeed = shiftIsDown || ctrlIsDown;
-                bool playRunningSound = false;
-
-                if (Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W))
+                if (localVel.z < (useSneakSpeed ? this.maxForwardSneakVelocity : this.maxForwardWalkVelocity))
                 {
-                    if (localVel.z < (useSneakSpeed ? this.maxForwardSneakVelocity : this.maxForwardWalkVelocity))
-                    {
-                        this.body.AddForce(forwardVector * (useSneakSpeed ? this.forwardSneakForce : this.forwardWalkForce));
-                    }
-                    playRunningSound = true;
+                    this.body.AddForce(forwardVector * (useSneakSpeed ? this.forwardSneakForce : this.forwardWalkForce));
                 }
-                else if (Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S))
-                {
-                    if (localVel.z > (useSneakSpeed ? -this.maxBackwardsSneakVelocity : -this.maxBackwardsWalkVelocity))
-                    {
-                        this.body.AddForce(backVector * (useSneakSpeed ? this.backwardsSneakForce : this.backwardsWalkForce));
-                    }
-                    playRunningSound = true;
-                }
-
-                if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A))
-                {
-                    if (localVel.x > -this.maxSidewaysVelocity)
-                    {
-                        this.body.AddForce(this.transform.right * -this.sidewaysForce);
-                    }
-                    playRunningSound = true;
-                }
-                else if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D))
-                {
-                    if (localVel.x < this.maxSidewaysVelocity)
-                    {
-                        this.body.AddForce(this.transform.right * this.sidewaysForce);
-                    }
-                    playRunningSound = true;
-                }
-
-                if (ctrlIsDown != this.isCrouching)
-                {
-                    this.isCrouching = ctrlIsDown;
-                    this.normalCollider.enabled = !this.isCrouching;
-                    this.crouchCollider.enabled = this.isCrouching;
-                    if (this.crouchCoroutine != null)
-                    {
-                        StopCoroutine(this.crouchCoroutine);
-                    }
-                    this.crouchCoroutine = StartCoroutine(Crouch(this.isCrouching));
-                }
-
-                if (playRunningSound && !shiftIsDown)
-                {
-                    if (!this.runningAudioSource.isPlaying)
-                    {
-                        this.runningAudioSource.Play();
-                    }
-                    this.walkingAudioSource.Stop();
-                }
-                else if (playRunningSound && shiftIsDown)
-                {
-                    if (!this.walkingAudioSource.isPlaying)
-                    {
-                        this.walkingAudioSource.Play();
-                    }
-                    this.runningAudioSource.Stop();
-                }
-                else
-                {
-                    this.walkingAudioSource.Stop();
-                    this.runningAudioSource.Stop();
-                }
+                playRunningSound = true;
             }
-        }
-
-        private IEnumerator Crouch(bool crouch)
-        {
-            var duration = 0f;
-            var start = this.cameraOffset.transform.localPosition;
-            var end = crouch ? this.cameraCrouchPosition : this.cameraNormalPosition;
-            while (duration < this.crouchTime)
+            else if (Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S))
             {
-                this.cameraOffset.transform.localPosition = Vector3.Lerp(start, end, duration / this.crouchTime);
-                duration += Time.deltaTime;
-                yield return null;
+                if (localVel.z > (useSneakSpeed ? -this.maxBackwardsSneakVelocity : -this.maxBackwardsWalkVelocity))
+                {
+                    this.body.AddForce(backVector * (useSneakSpeed ? this.backwardsSneakForce : this.backwardsWalkForce));
+                }
+                playRunningSound = true;
             }
-            this.cameraOffset.transform.localPosition = end;
-            this.crouchCoroutine = null;
-        }
 
-        private bool IsGrounded()
-        {
-            return Physics.Raycast(transform.position, -Vector3.up, this.distToGround + 0.8f);
+            if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A))
+            {
+                if (localVel.x > -this.maxSidewaysVelocity)
+                {
+                    this.body.AddForce(this.transform.right * -this.sidewaysForce);
+                }
+                playRunningSound = true;
+            }
+            else if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D))
+            {
+                if (localVel.x < this.maxSidewaysVelocity)
+                {
+                    this.body.AddForce(this.transform.right * this.sidewaysForce);
+                }
+                playRunningSound = true;
+            }
+
+            if (ctrlIsDown != this.isCrouching)
+            {
+                this.isCrouching = ctrlIsDown;
+                this.normalCollider.enabled = !this.isCrouching;
+                this.crouchCollider.enabled = this.isCrouching;
+                if (this.crouchCoroutine != null)
+                {
+                    StopCoroutine(this.crouchCoroutine);
+                }
+                this.crouchCoroutine = StartCoroutine(Crouch(this.isCrouching));
+            }
+
+            if (playRunningSound && !shiftIsDown)
+            {
+                if (!this.runningAudioSource.isPlaying)
+                {
+                    this.runningAudioSource.Play();
+                }
+                this.walkingAudioSource.Stop();
+            }
+            else if (playRunningSound && shiftIsDown)
+            {
+                if (!this.walkingAudioSource.isPlaying)
+                {
+                    this.walkingAudioSource.Play();
+                }
+                this.runningAudioSource.Stop();
+            }
+            else
+            {
+                this.walkingAudioSource.Stop();
+                this.runningAudioSource.Stop();
+            }
         }
 
         private void Update()
@@ -206,5 +182,34 @@ namespace Gemmeleg
                 this.camera.transform.localRotation = Quaternion.Euler(euler);
             }
         }
+
+        public void ResetCamera(Vector3 position)
+        {
+            this.camera.transform.parent = this.cameraOffset.transform;
+            this.camera.transform.localPosition = Vector3.zero;
+            this.camera.transform.localRotation = Quaternion.identity;
+            this.transform.position = position;
+        }
+
+        private IEnumerator Crouch(bool crouch)
+        {
+            var duration = 0f;
+            var start = this.cameraOffset.transform.localPosition;
+            var end = crouch ? this.cameraCrouchPosition : this.cameraNormalPosition;
+            while (duration < this.crouchTime)
+            {
+                this.cameraOffset.transform.localPosition = Vector3.Lerp(start, end, duration / this.crouchTime);
+                duration += Time.deltaTime;
+                yield return null;
+            }
+            this.cameraOffset.transform.localPosition = end;
+            this.crouchCoroutine = null;
+        }
+
+        private bool IsGrounded()
+        {
+            return Physics.Raycast(transform.position, -Vector3.up, this.distToGround + 0.8f);
+        }
+
     }
 }

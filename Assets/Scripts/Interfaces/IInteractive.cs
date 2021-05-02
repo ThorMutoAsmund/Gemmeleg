@@ -7,9 +7,13 @@ using UnityEngine;
 
 namespace Gemmeleg
 {
-    public interface ICanBeDriven : IFInteractive
+    public interface IInteractive
     {
-        void Enter(GameObject player);
-        void Exit();
+    }
+    public interface IFInteractive : IInteractive
+    {
+    }
+    public interface IEInteractive : IInteractive
+    {
     }
 }

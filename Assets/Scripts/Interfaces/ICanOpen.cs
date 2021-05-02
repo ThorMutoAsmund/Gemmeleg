@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Gemmeleg
 {
-    public interface ICanOpen
+    public interface ICanOpen : IEInteractive
     {
         void Toogle();
     }
