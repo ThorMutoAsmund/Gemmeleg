@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 3352635380573462381}
   - component: {fileID: 3583896771849663179}
   - component: {fileID: 1412502467310252294}
-  - component: {fileID: 2519243430709496027}
+  - component: {fileID: 1543268817968414558}
   - component: {fileID: 4338556899225669681}
   - component: {fileID: 3659724300211920983}
   - component: {fileID: 4179653640455251016}
@@ -36,7 +36,7 @@ Transform:
   m_GameObject: {fileID: 3352635380573462382}
   m_LocalRotation: {x: -0, y: 0.7308774, z: -0, w: 0.68250877}
   m_LocalPosition: {x: -45.15, y: 2.15, z: 13.1}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.5, y: 1, z: 0.5}
   m_Children:
   - {fileID: 4954006816233073452}
   m_Father: {fileID: 0}
@@ -128,6 +128,9 @@ MonoBehaviour:
   runningAudioSource: {fileID: 3659724300211920983}
   jumpAudioSource: {fileID: 4179653640455251016}
   walkingAudioSource: {fileID: 2145738386375490906}
+  normalCollider: {fileID: 1543268817968414558}
+  crouchCollider: {fileID: 4338556899225669681}
+  cameraOffset: {fileID: 4954006816233073452}
 --- !u!54 &3583896771849663179
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -156,20 +159,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3db463e66b856ca44a369c38ad5aeb9a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!136 &2519243430709496027
-CapsuleCollider:
+--- !u!135 &1543268817968414558
+SphereCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3352635380573462382}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: 313dfb38e2f119949b7f7b6b51ca1379, type: 2}
   m_IsTrigger: 0
-  m_Enabled: 0
-  m_Radius: 0.5000001
-  m_Height: 2
-  m_Direction: 1
-  m_Center: {x: -0.0000037550926, y: 0, z: 0.0000018179417}
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 1
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!135 &4338556899225669681
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -177,12 +179,12 @@ SphereCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3352635380573462382}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: 313dfb38e2f119949b7f7b6b51ca1379, type: 2}
   m_IsTrigger: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 2
-  m_Radius: 1
-  m_Center: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
+  m_Radius: 0.8
+  m_Center: {x: 0, y: -0.2, z: 0}
 --- !u!82 &3659724300211920983
 AudioSource:
   m_ObjectHideFlags: 0

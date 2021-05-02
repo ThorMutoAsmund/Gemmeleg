@@ -10,6 +10,9 @@ namespace Gemmeleg
         [SerializeField] private AudioSource runningAudioSource;
         [SerializeField] private AudioSource jumpAudioSource;
         [SerializeField] private AudioSource walkingAudioSource;
+        [SerializeField] private Collider normalCollider;
+        [SerializeField] private Collider crouchCollider;
+        [SerializeField] private Transform cameraOffset;
 
         private readonly float rotationSpeed = 1.5f;
         private readonly float lookSpeed = 1.2f;
@@ -30,6 +33,7 @@ namespace Gemmeleg
         private readonly float sidewaysForce = 4000f;
 
         private readonly float jumpForce = 800f;
+        private readonly float crouchTime = 0.15f;
 
         private readonly float deceleration = 400f;
 
@@ -37,6 +41,10 @@ namespace Gemmeleg
         private new Camera camera;
         private float distToGround;
         private NavMeshAgent navAgent;
+        private Vector3 cameraNormalPosition;
+        private Vector3 cameraCrouchPosition;
+        private bool isCrouching;
+        private Coroutine crouchCoroutine;
 
         private void Start()
         {
@@ -45,36 +53,39 @@ namespace Gemmeleg
             this.camera = this.GetComponentInChildren<Camera>();
             this.distToGround = GetComponent<SphereCollider>().radius;
             this.navAgent = GetComponent<NavMeshAgent>();
+            this.cameraNormalPosition = new Vector3(0f, 1.5f, 0f);
+            this.cameraCrouchPosition = new Vector3(0f, 1.5f*0.6f, 0f);
         }
 
         private void FixedUpdate()
         {
             var localVel = this.transform.InverseTransformDirection(this.body.velocity);
 
-            var forwardVector = this.transform.forward;
-            var backVector = -this.transform.forward;
+            var forwardVector = this.transform.forward.With(y: -0.35f);
+            var backVector = (-this.transform.forward).With(y: -0.35f);
             var decelerationVector = -this.body.velocity;
             decelerationVector.y = 0;
 
             this.body.AddForce(decelerationVector * this.deceleration);
 
             var shiftIsDown = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-
+            var ctrlIsDown = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+            var useSneakSpeed = shiftIsDown || ctrlIsDown;
             bool playRunningSound = false;
 
             if (Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W))
             {
-                if (localVel.z < (!shiftIsDown ? this.maxForwardWalkVelocity : this.maxForwardSneakVelocity))
+                if (localVel.z < (useSneakSpeed ? this.maxForwardSneakVelocity : this.maxForwardWalkVelocity))
                 {
-                    this.body.AddForce(forwardVector * (!shiftIsDown ? this.forwardWalkForce : this.forwardSneakForce));
+                    this.body.AddForce(forwardVector * (useSneakSpeed ? this.forwardSneakForce : this.forwardWalkForce));
                 }
                 playRunningSound = true;
             }
             else if (Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S))
             {
-                if (localVel.z > (!shiftIsDown ? -this.maxBackwardsWalkVelocity : -this.maxBackwardsSneakVelocity))
+                if (localVel.z > (useSneakSpeed ? -this.maxBackwardsSneakVelocity : -this.maxBackwardsWalkVelocity))
                 {
-                    this.body.AddForce(backVector * (!shiftIsDown ? this.backwardsWalkForce : this.backwardsSneakForce));
+                    this.body.AddForce(backVector * (useSneakSpeed ? this.backwardsSneakForce : this.backwardsWalkForce));
                 }
                 playRunningSound = true;
             }
@@ -94,6 +105,18 @@ namespace Gemmeleg
                     this.body.AddForce(this.transform.right * this.sidewaysForce);
                 }
                 playRunningSound = true;
+            }
+
+            if (ctrlIsDown != this.isCrouching)
+            {
+                this.isCrouching = ctrlIsDown;
+                this.normalCollider.enabled = !this.isCrouching;
+                this.crouchCollider.enabled = this.isCrouching;
+                if (this.crouchCoroutine != null)
+                {
+                    StopCoroutine(this.crouchCoroutine);
+                }
+                this.crouchCoroutine = StartCoroutine(Crouch(this.isCrouching));
             }
 
             if (playRunningSound && !shiftIsDown)
@@ -117,6 +140,21 @@ namespace Gemmeleg
                 this.walkingAudioSource.Stop();
                 this.runningAudioSource.Stop();
             }
+        }
+
+        private IEnumerator Crouch(bool crouch)
+        {
+            var duration = 0f;
+            var start = this.cameraOffset.transform.localPosition;
+            var end = crouch ? this.cameraCrouchPosition : this.cameraNormalPosition;
+            while (duration < this.crouchTime)
+            {
+                this.cameraOffset.transform.localPosition = Vector3.Lerp(start, end, duration / this.crouchTime);
+                duration += Time.deltaTime;
+                yield return null;
+            }
+            this.cameraOffset.transform.localPosition = end;
+            this.crouchCoroutine = null;
         }
 
         private bool IsGrounded()
