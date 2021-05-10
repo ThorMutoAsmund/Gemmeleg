@@ -25,7 +25,7 @@ namespace Photon.Pun.Simple.Internal
 		public static bool needToSendInitialForNewConn;
 
 
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
 		public static void Bootstrap()
 		{
 			single = new TickManager();

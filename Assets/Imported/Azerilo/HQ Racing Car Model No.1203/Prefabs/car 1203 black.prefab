@@ -1444,8 +1444,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4012108634830722}
-  - component: {fileID: 8282903034477891205}
-  - component: {fileID: 131175758602443589}
+  - component: {fileID: 7639119750647566161}
+  - component: {fileID: 507884338972354347}
   - component: {fileID: 4173324392752491319}
   m_Layer: 8
   m_Name: car 1203 black
@@ -1488,20 +1488,7 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8282903034477891205
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1313628572427264}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b7787c639335bfc429491401701c2cdd, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  cameraOffset: {fileID: 7194886356652505209}
---- !u!114 &131175758602443589
+--- !u!114 &7639119750647566161
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1510,9 +1497,22 @@ MonoBehaviour:
   m_GameObject: {fileID: 1313628572427264}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1458c7f9541383e43b3f3b72f36a1bdd, type: 3}
+  m_Script: {fileID: 11500000, guid: 3e5edc5adf55b38448810df65624b6ec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &507884338972354347
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1313628572427264}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02e580a9e9e20fc43ab6c84d9bedc110, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cameraOffset: {fileID: 7194886356652505209}
 --- !u!54 &4173324392752491319
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -2161,7 +2161,7 @@ MeshCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1495753612102378}
-  m_Material: {fileID: 13400000, guid: 313dfb38e2f119949b7f7b6b51ca1379, type: 2}
+  m_Material: {fileID: 13400000, guid: 374fe40497c89f344b4d26f00e000751, type: 2}
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 4
