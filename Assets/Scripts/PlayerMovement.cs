@@ -49,8 +49,14 @@ namespace Gemmeleg
         private bool isCrouching;
         private Coroutine crouchCoroutine;
 
+        private Vector3 cameraNormalOffset;
+        private Vector3 cameraThirdPersonOffset;
+        private bool isThirdPersonOffset;
+
         private void Start()
         {
+            this.cameraNormalOffset = new Vector3(0f, 1.21f, 0f);
+            this.cameraThirdPersonOffset = new Vector3(0f, 2f, -1.5f);
             this.body = GetComponent<Rigidbody>();
             this.body.drag = 0;
             this.camera = this.GetComponentInChildren<Camera>();
@@ -180,6 +186,19 @@ namespace Gemmeleg
                 }
 
                 this.camera.transform.localRotation = Quaternion.Euler(euler);
+            }
+
+            if (Input.GetKeyDown(KeyCode.F5))
+            {
+                this.isThirdPersonOffset = !this.isThirdPersonOffset;
+                if (this.isThirdPersonOffset)
+                {
+                    this.cameraOffset.localPosition = this.cameraThirdPersonOffset;
+                }
+                else
+                {
+                    this.cameraOffset.localPosition = this.cameraNormalOffset;
+                }
             }
         }
 
