@@ -9,6 +9,7 @@ namespace Gemmeleg
 {
     public interface ICanBeTaken : IEInteractive
     {
-        void Take(Transform actor);
+        ICanBeTaken Take(Transform actor);
+        void Drop(GameObject player);
     }
 }

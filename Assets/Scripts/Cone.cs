@@ -1,19 +1,12 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace Gemmeleg
 {
-    public class Weapon : MonoBehaviour, ICanBeTaken
+    public class Cone : MonoBehaviour, ICanBeTaken
     {
-        [SerializeField] private AudioSource takeSound;
-
-        private float flyDuration = 0.3f;
-
-        private void OnDestroy()
-        {
-            StopAllCoroutines();
-        }
+        private float flyDuration = 0.15f;
 
         private IEnumerator PerformTaking(Transform endTransform)
         {
@@ -26,35 +19,43 @@ namespace Gemmeleg
                 t += Time.deltaTime;
                 yield return null;
             }
-            Hide();
+            Hide(true);
         }
-        
+
         public ICanBeTaken Take(Transform actor)
         {
-            StartCoroutine(PerformTaking(actor));
-            if (this.takeSound != null)
-            {
-                this.takeSound.Play();
-            }
+            var rigidBody = this.GetComponentInChildren<Rigidbody>();
+            rigidBody.isKinematic = true;
 
-            return null;
+            StartCoroutine(PerformTaking(actor));
+            //if (this.takeSound != null)
+            //{
+            //    this.takeSound.Play();
+            //}
+
+            return this;
         }
 
-        private  void Hide()
+        private void Hide(bool doHide)
         {
             foreach (var r in this.GetComponentsInChildren<Renderer>())
             {
-                r.enabled = false;
+                r.enabled = !doHide;
             }
             foreach (var r in this.GetComponentsInChildren<Collider>())
             {
-                r.enabled = false;
+                r.enabled = !doHide;
             }
         }
-
         public void Drop(GameObject player)
         {
-            // TBD
+            this.transform.rotation = Quaternion.Euler(0f, this.transform.rotation.eulerAngles.y, 0f);
+            this.transform.position = player.transform.position + player.transform.forward * 2f;
+
+            var rigidBody = this.GetComponentInChildren<Rigidbody>();
+            rigidBody.isKinematic = false;
+
+            Hide(false);
         }
     }
 }
