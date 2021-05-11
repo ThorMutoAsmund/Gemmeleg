@@ -12,7 +12,7 @@ namespace Gemmeleg
         private readonly float interactionRadius = 2f;
         private Collider[] colliders;
         private ICanBeDriven vehicle;
-
+        private ICanBeTaken holding;
         private void Awake()
         {
             this.colliders = new Collider[10];
@@ -32,6 +32,13 @@ namespace Gemmeleg
 
         private void AttemptInteractionWithE()
         {
+            if (this.holding != null)
+            {
+                this.holding.Drop(this.gameObject);
+                this.holding = null;
+                return;
+            }
+
             var numberOfColliders = Physics.OverlapSphereNonAlloc(this.transform.position, this.interactionRadius, this.colliders, Layers.InteractionLayerMask);
             var minDist = float.MaxValue;
             IEInteractive selectedInteractive = null;
@@ -57,7 +64,7 @@ namespace Gemmeleg
                 }
                 else if (selectedInteractive is ICanBeTaken canBeTaken)
                 {
-                    canBeTaken.Take(this.transform);
+                    this.holding = canBeTaken.Take(this.transform);
                 }
             }
         }
